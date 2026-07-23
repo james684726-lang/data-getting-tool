@@ -55,10 +55,7 @@ type SerpApiPostsResult = {
   error?: string;
 };
 
-async function fetchPostsForDataId(
-  dataId: string,
-  apiKey: string,
-): Promise<SerpApiPostsResult> {
+async function fetchPostsForDataId(dataId: string, apiKey: string): Promise<SerpApiPostsResult> {
   try {
     const params = new URLSearchParams({
       engine: "google_maps_posts",
@@ -77,10 +74,7 @@ async function fetchPostsForDataId(
   }
 }
 
-function toRow(
-  r: SerpApiLocalResult,
-  postsResult?: SerpApiPostsResult,
-): BusinessRow {
+function toRow(r: SerpApiLocalResult, postsResult?: SerpApiPostsResult): BusinessRow {
   const placeId = r.place_id || r.data_id || "";
   const gps = r.gps_coordinates
     ? { lat: r.gps_coordinates.latitude, lng: r.gps_coordinates.longitude }
@@ -108,9 +102,7 @@ function toRow(
     if (latestPostDate) {
       const postDate = new Date(latestPostDate);
       const now = new Date();
-      daysSinceLastPost = Math.floor(
-        (now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      daysSinceLastPost = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24));
       postedLast90Days = daysSinceLastPost <= 90 ? "Yes" : "No";
     }
   }
@@ -139,21 +131,14 @@ function toRow(
 
 export const searchBusinesses = createServerFn({ method: "POST" })
   .inputValidator(
-    (data: {
-      keyword: string;
-      location: string;
-      start: number;
-      radiusMiles: number;
-    }) => {
+    (data: { keyword: string; location: string; start: number; radiusMiles: number }) => {
       if (!data.keyword?.trim()) throw new Error("Keyword is required");
       if (!data.location?.trim()) throw new Error("Location is required");
       return {
         keyword: data.keyword.trim(),
         location: data.location.trim(),
         start: Math.max(0, Math.floor(data.start || 0)),
-        radiusMiles: [5, 10, 25, 50].includes(data.radiusMiles)
-          ? data.radiusMiles
-          : 25,
+        radiusMiles: [5, 10, 25, 50].includes(data.radiusMiles) ? data.radiusMiles : 25,
       };
     },
   )
@@ -235,9 +220,7 @@ export const searchBusinesses = createServerFn({ method: "POST" })
     // Convert to rows
     const rows = list.map((result, index) => toRow(result, postsResults[index]));
 
-    const hasMore = Boolean(
-      json.serpapi_pagination?.next || json.serpapi_pagination?.next_link,
-    );
+    const hasMore = Boolean(json.serpapi_pagination?.next || json.serpapi_pagination?.next_link);
 
     return {
       page: Math.floor(data.start / 20),
